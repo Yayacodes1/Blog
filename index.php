@@ -1,20 +1,34 @@
 <?php
-// Get PDO DSN string and connect to the database
-$root = realpath(__DIR__);
-$database = $root . '/data/data.sqlite';  // Make sure this path is correct
-$dsn = 'sqlite:' . $database;
+try {
+    // Get PDO DSN string and connect to the database
+      // Make sure this path is correct
+      require_once 'lib/common.php';
+
+    // Check if database file exists
+    if (!file_exists($database)) {
+        die("Database not found. Please <a href='data/init.php'>initialize the database</a> first.");
+    }
+    
 
 // Create PDO connection
-$pdo = new PDO($dsn);
+    $pdo = getPDO();
+    $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
 
-// Prepare and execute the statement to get all posts
-$sql = "SELECT * FROM post ORDER BY created_at DESC";
-$stmt = $pdo->query($sql);
+    // Check if table exists
+    $tableExists = $pdo->query("SELECT name FROM sqlite_master WHERE type='table' AND name='post'")->fetch();
+    if (!$tableExists) {
+        die("Database table not found. Please <a href='data/init.php'>initialize the database</a> first.");
+    }
+
+    // Prepare and execute the statement to get all posts
+    $sql = "SELECT * FROM post ORDER BY created_at DESC, id DESC";
+    $stmt = $pdo->query($sql);
 ?>
 <!DOCTYPE html>
 <html>
     <head>
-        <title>A blog application</title>
+    <?php require 'templates/title.php' ?>
+
         <meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
     </head>
     <body>
@@ -28,7 +42,10 @@ $stmt = $pdo->query($sql);
             <p>
                 <?php echo htmlspecialchars($row['body'], ENT_HTML5, 'UTF-8') ?>
             </p>
-            <p><a href="#">Read more...</a></p>
+            <p><a 
+            href="data/view-post.php?post_id=<?php echo $row['id'] ?>"
+            >Read more...</a>
+        </p>
     
     
                 
